@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Presensi BPOM</title>
+    
+    <!-- Memanggil file manifest.json -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Warna Tema untuk browser mobile -->
+    <meta name="theme-color" content="#0d47a1">
+    
+    <!-- Icon untuk iOS Apple -->
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/0/02/Logo_Badan_POM.png">
+    
+    <style>
+        /* Menghilangkan margin dan membuat iframe memenuhi seluruh layar */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Mencegah scroll ganda */
+            background-color: #eef2f3;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PENTING: Ganti URL di bawah ini dengan URL Web App Google Apps Script Anda yang berakhiran /exec -->
+    <iframe src="https://script.google.com/macros/s/AKfycb.../exec" allow="geolocation; camera"></iframe>
+
+    <script>
+        // Mendaftarkan Service Worker agar memenuhi syarat PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker berhasil didaftarkan pada scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Pendaftaran ServiceWorker gagal:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
