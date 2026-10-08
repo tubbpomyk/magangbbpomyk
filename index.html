@@ -23,11 +23,31 @@
             height: 100%;
             overflow: hidden; /* Mencegah scroll ganda */
             background-color: #eef2f3;
+            font-family: sans-serif;
         }
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+        }
+        
+        /* Desain Tombol Overlay Instal PWA */
+        #pwaInstallBtn {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            padding: 12px 24px;
+            background-color: #0d47a1;
+            color: #ffffff;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(13, 71, 161, 0.4);
+            display: none; /* Disembunyikan dulu sampai event PWA siap */
+            cursor: pointer;
         }
     </style>
 </head>
@@ -36,17 +56,62 @@
     <!-- PENTING: Ganti URL di bawah ini dengan URL Web App Google Apps Script Anda yang berakhiran /exec -->
     <iframe src="https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec" allow="geolocation; camera"></iframe>
 
+    <!-- Tombol Instal Melayang yang muncul saat redirect -->
+    <button id="pwaInstallBtn">📥 Instal ke Layar Utama</button>
+
     <script>
-        // Mendaftarkan Service Worker agar memenuhi syarat PWA
+        // Mendaftarkan Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
                     .then(registration => {
-                        console.log('ServiceWorker berhasil didaftarkan pada scope:', registration.scope);
+                        console.log('ServiceWorker berhasil didaftarkan');
                     })
                     .catch(error => {
                         console.error('Pendaftaran ServiceWorker gagal:', error);
                     });
+            });
+        }
+
+        // ==========================================
+        // SCRIPT TRIGGER INSTALASI OTOMATIS
+        // ==========================================
+        let deferredPrompt;
+        const installBtn = document.getElementById('pwaInstallBtn');
+
+        // Menangkap event Pop-Up Instalasi dari sistem HP
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block'; // Munculkan tombol overlay
+        });
+
+        // Menjalankan Pop-Up ketika tombol overlay disentuh
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt(); // Munculkan pop-up instalasi HP
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('Aplikasi diinstal');
+                    installBtn.style.display = 'none'; // Sembunyikan tombol
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // Event jika aplikasi sukses terinstal
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+        });
+
+        // Panduan Manual khusus iOS (Karena iPhone/iPad memblokir beforeinstallprompt)
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        if (isIOS && !isStandalone) {
+            installBtn.style.display = 'block';
+            installBtn.addEventListener('click', () => {
+                alert('TIPS PENGGUNA IPHONE/IPAD:\n\n1. Ketuk ikon "Bagikan" (Share) di bawah layar.\n2. Pilih "Tambah ke Layar Utama" (Add to Home Screen).');
             });
         }
     </script>
