@@ -3,7 +3,7 @@
 "short_name": "Presensi BPOM",
 "description": "Aplikasi Presensi Magang dan PKL Balai Besar POM di Yogyakarta",
 "start_url": "./index.html",
-"display": "standalone",
+"display": "fullscreen",
 "background_color": "#eef2f3",
 "theme_color": "#0d47a1",
 "icons": [
