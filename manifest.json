@@ -2,7 +2,7 @@
 "name": "Presensi Magang & PKL Balai BPOM di Yogyakarta",
 "short_name": "Presensi BPOM",
 "description": "Aplikasi Presensi Magang dan PKL Balai Besar POM di Yogyakarta",
-"start_url": "./index.html",
+"start_url": "https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec",
 "display": "fullscreen",
 "background_color": "#eef2f3",
 "theme_color": "#0d47a1",
