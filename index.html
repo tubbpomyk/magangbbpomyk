@@ -2,121 +2,158 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <!-- Tambahan viewport-fit=cover agar fullscreen di HP berponi (notch) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Presensi BPOM</title>
+    <title>Instal Presensi BPOM</title>
     
-    <!-- Memanggil file manifest.json -->
     <link rel="manifest" href="manifest.json">
-    
-    <!-- Warna Tema untuk browser mobile -->
     <meta name="theme-color" content="#0d47a1">
-    
-    <!-- Icon untuk iOS Apple -->
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/0/02/Logo_Badan_POM.png">
     
+    <!-- Memanggil library dan font yang sama agar senada -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* Menghilangkan margin dan membuat iframe memenuhi seluruh layar */
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden; /* Mencegah scroll ganda */
-            background-color: #eef2f3;
-            font-family: sans-serif;
+        body { 
+            background: linear-gradient(135deg, #eef2f3 0%, #dbe6f6 100%); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; 
+            text-align: center;
+            padding: 20px;
         }
-        
-        iframe {
+        .install-card { 
+            width: 100%; 
+            max-width: 400px; 
+            padding: 40px 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(13, 71, 161, 0.2); 
+            background-color: #ffffff; 
+            animation: fadeIn 0.8s ease-in-out; 
+        }
+        .logo-img { width: 100px; height: auto; margin-bottom: 20px; }
+        .title { color: #0d47a1; font-weight: 700; font-size: 1.6rem; margin-bottom: 10px; }
+        .subtitle { color: #666; font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5; }
+        .btn-install { 
+            background-color: #0d47a1; 
+            color: white;
+            border: none; 
+            padding: 15px; 
+            font-size: 1.1rem;
+            font-weight: 600; 
+            border-radius: 12px; 
             width: 100%;
-            height: 100%;
-            border: none;
-            display: block; /* Menghilangkan jarak putih di bawah iframe */
+            transition: all 0.3s ease; 
+            box-shadow: 0 4px 15px rgba(13, 71, 161, 0.3);
+            display: none; /* Disembunyikan sampai event PWA siap */
         }
-        
-        /* Desain Tombol Overlay Instal PWA */
-        #pwaInstallBtn {
-            position: fixed;
-            bottom: max(25px, env(safe-area-inset-bottom)); /* Menyesuaikan poni bawah iPhone */
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            padding: 12px 24px;
-            background-color: #0d47a1;
-            color: #ffffff;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(13, 71, 161, 0.4);
-            display: none; /* Disembunyikan dulu sampai event PWA siap */
-            cursor: pointer;
+        .btn-install:active { transform: scale(0.96); }
+        .loading-text { color: #888; font-size: 0.9rem; font-style: italic; }
+        .ios-guide {
+            display: none;
+            background-color: #f8f9fa;
+            border: 2px dashed #0d47a1;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #333;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <!-- PENTING: Ganti URL di bawah ini dengan URL Web App Google Apps Script Anda yang berakhiran /exec -->
-    <iframe src="https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec" allow="geolocation; camera"></iframe>
+    <div class="install-card">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/02/Logo_Badan_POM.png" alt="Logo" class="logo-img">
+        <h2 class="title">Pasang Aplikasi</h2>
+        <p class="subtitle">Instal aplikasi Presensi Magang & PKL Balai BPOM di layar utama HP Anda agar lebih cepat diakses.</p>
+        
+        <!-- Pesan Loading saat menunggu event dari browser -->
+        <p id="loadingMsg" class="loading-text"><span class="spinner-border spinner-border-sm me-2"></span> Menyiapkan instalasi...</p>
 
-    <!-- Tombol Instal Melayang yang muncul saat redirect -->
-    <button id="pwaInstallBtn">📥 Instal ke Layar Utama</button>
+        <!-- Tombol Utama Instal -->
+        <button id="pwaInstallBtn" class="btn-install">
+            <i class="bi bi-download me-2"></i> Instal Sekarang
+        </button>
+
+        <!-- Panduan khusus iOS -->
+        <div id="iosGuide" class="ios-guide mt-3">
+            <p class="mb-2 fw-bold text-primary"><i class="bi bi-apple me-1"></i> Pengguna iPhone/iPad:</p>
+            1. Ketuk ikon <b>Bagikan</b> <i class="bi bi-share"></i> di bawah layar.<br>
+            2. Gulir ke bawah, pilih <b>Tambah ke Layar Utama</b> <i class="bi bi-plus-square"></i>.
+        </div>
+    </div>
 
     <script>
         // Mendaftarkan Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker berhasil didaftarkan');
-                    })
-                    .catch(error => {
-                        console.error('Pendaftaran ServiceWorker gagal:', error);
-                    });
+                    .then(() => console.log('ServiceWorker siap.'))
+                    .catch(err => console.error('ServiceWorker error:', err));
             });
         }
 
-        // ==========================================
-        // SCRIPT TRIGGER INSTALASI OTOMATIS
-        // ==========================================
-        let deferredPrompt;
         const installBtn = document.getElementById('pwaInstallBtn');
+        const loadingMsg = document.getElementById('loadingMsg');
+        const iosGuide = document.getElementById('iosGuide');
+        let deferredPrompt;
 
-        // Menangkap event Pop-Up Instalasi dari sistem HP
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'block'; // Munculkan tombol overlay
-        });
+        // Mendeteksi sistem perangkat
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-        // Menjalankan Pop-Up ketika tombol overlay disentuh
+        if (isStandalone) {
+            // Jika web ini dibuka dari aplikasi yang sudah terinstal, ubah teks menjadi tombol buka aplikasi (meski secara teknis sudah di dalam aplikasi)
+            loadingMsg.style.display = 'none';
+            document.querySelector('.subtitle').innerHTML = "Aplikasi sudah berhasil terinstal di HP Anda.";
+        } else {
+            if (isIOS) {
+                // Tampilan khusus iOS
+                loadingMsg.style.display = 'none';
+                iosGuide.style.display = 'block';
+            } else {
+                // Tampilan Android / Chrome PC
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    loadingMsg.style.display = 'none';
+                    installBtn.style.display = 'block'; // Munculkan tombol
+                });
+
+                // Jika event tidak kunjung muncul (mungkin butuh waktu, atau diblokir)
+                setTimeout(() => {
+                    if(!deferredPrompt && !isIOS) {
+                        loadingMsg.innerHTML = "Browser Anda mungkin memerlukan instalasi manual melalui menu browser titik tiga (⋮).";
+                    }
+                }, 3000);
+            }
+        }
+
+        // Aksi ketika tombol Instal diklik
         installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
-                deferredPrompt.prompt(); // Munculkan pop-up instalasi HP
+                deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    console.log('Aplikasi diinstal');
-                    installBtn.style.display = 'none'; // Sembunyikan tombol
+                    console.log('Aplikasi sukses diinstal');
+                    installBtn.style.display = 'none';
+                    document.querySelector('.subtitle').innerHTML = "Aplikasi sedang diinstal ke Layar Utama Anda. Silakan cek HP Anda.";
                 }
                 deferredPrompt = null;
             }
         });
 
-        // Event jika aplikasi sukses terinstal
+        // Deteksi jika sukses instal dari event sistem
         window.addEventListener('appinstalled', () => {
             installBtn.style.display = 'none';
+            document.querySelector('.subtitle').innerHTML = "Instalasi berhasil! Silakan tutup halaman ini dan buka aplikasi dari Layar Utama HP Anda.";
         });
-
-        // Panduan Manual khusus iOS (Karena iPhone/iPad memblokir beforeinstallprompt)
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-        if (isIOS && !isStandalone) {
-            installBtn.style.display = 'block';
-            installBtn.addEventListener('click', () => {
-                alert('TIPS PENGGUNA IPHONE/IPAD:\n\n1. Ketuk ikon "Bagikan" (Share) di bawah layar.\n2. Pilih "Tambah ke Layar Utama" (Add to Home Screen).');
-            });
-        }
     </script>
 </body>
 </html>
