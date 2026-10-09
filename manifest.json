@@ -1,6 +1,6 @@
 {
   "name": "Presensi Magang & PKL Balai BPOM di Yogyakarta",
-  "short_name": "Presensi BPOM",
+  "short_name": "Presensi Magang & PKL",
   "description": "Aplikasi Presensi Magang dan PKL Balai Besar POM di Yogyakarta",
   "start_url": "./index.html?source=pwa",
   "display": "fullscreen",
