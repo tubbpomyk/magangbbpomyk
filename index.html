@@ -2,7 +2,6 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <!-- Tambahan meta tag untuk memaksa fullscreen di berbagai device -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,12 +24,11 @@
             padding: 0; 
             width: 100%; 
             height: 100%; 
-            overflow: hidden; /* Mencegah scroll pada body utama */
+            overflow: hidden; 
             background-color: #eef2f3;
             font-family: 'Poppins', sans-serif; 
         }
         
-        /* Container untuk UI Instalasi */
         #installContainer {
             background: linear-gradient(135deg, #eef2f3 0%, #dbe6f6 100%); 
             display: flex; 
@@ -46,12 +44,11 @@
             z-index: 10;
         }
 
-        /* Iframe untuk membungkus Google Apps Script */
         #appFrame {
             width: 100%;
             height: 100%;
             border: none;
-            display: none; /* Sembunyikan iframe secara default */
+            display: none; 
             position: absolute;
             top: 0;
             left: 0;
@@ -100,11 +97,9 @@
 </head>
 <body>
 
-    <!-- FRAME GOOGLE APPS SCRIPT -->
-    <!-- Ganti URL src dengan URL Exec Google Apps Script Anda -->
+    <!-- Ganti src ini dengan URL EXECUTABLE Google Apps Script yang benar -->
     <iframe id="appFrame" src="https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec?source=pwa" allow="geolocation"></iframe>
 
-    <!-- CONTAINER INSTALASI -->
     <div id="installContainer">
         <div class="install-card">
             <img src="https://upload.wikimedia.org/wikipedia/commons/0/02/Logo_Badan_POM.png" alt="Logo" class="logo-img">
@@ -134,6 +129,13 @@
             });
         }
 
+        // TANGKAP NAVIGASI DARI DALAM IFRAME AGAR TETAP FULL SCREEN
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.action === 'redirect') {
+                document.getElementById('appFrame').src = event.data.url;
+            }
+        });
+
         const installContainer = document.getElementById('installContainer');
         const appFrame = document.getElementById('appFrame');
         const installBtn = document.getElementById('pwaInstallBtn');
@@ -142,21 +144,15 @@
         const mainSubtitle = document.getElementById('mainSubtitle');
         let deferredPrompt;
 
-        // Ambil parameter dari manifest.json saat dibuka lewat PWA
         const urlParams = new URLSearchParams(window.location.search);
         const isPWA = urlParams.get('source') === 'pwa';
-
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || isPWA;
 
         if (isStandalone) {
-            // JIKA SUDAH DIINSTAL / DIBUKA DARI PWA FULLSCREEN
-            // Sembunyikan halaman instalasi, tampilkan iframe
             installContainer.style.display = 'none';
             appFrame.style.display = 'block';
-
         } else {
-            // JIKA DIBUKA DI BROWSER BIASA (BELUM DIINSTAL)
             if (isIOS) {
                 loadingMsg.style.display = 'none';
                 iosGuide.style.display = 'block';
@@ -182,7 +178,6 @@
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    console.log('Aplikasi sukses diinstal');
                     installBtn.style.display = 'none';
                     mainSubtitle.innerHTML = "Aplikasi sedang diinstal ke Layar Utama Anda. Silakan cek HP Anda.";
                 }
