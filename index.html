@@ -136,12 +136,12 @@
             } 
             // ---> TAMBAHAN BARU: EKSEKUSI EXIT APLIKASI
             else if (event.data && event.data.action === 'exit') {
-                window.close(); // Berusaha menutup window standar
+                // Menutup PWA dari shell
+                window.close(); 
                 
-                // Trik Paling Ampuh untuk Android PWA:
-                // Memundurkan history sejauh mungkin akan memaksa OS Android menutup PWA 
-                // karena menganggap sesi aplikasi sudah selesai.
-                window.history.go(-(window.history.length - 1));
+                // Menghapus perintah window.history.go karena script trap di login.html
+                // sudah memastikan halaman tertahan di form login dan tidak akan pernah
+                // melompat kembali ke halaman PresensiHome.
             }
         });
 
