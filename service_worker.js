@@ -1,4 +1,4 @@
-const CACHE_NAME = 'presensi-magang-bpom-v3';
+const CACHE_NAME = 'presensi-magang-bpom-v4';
 const urlsToCache = [
   './',
   './index.html',
