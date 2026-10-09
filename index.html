@@ -2,8 +2,13 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <!-- Tambahan meta tag untuk memaksa fullscreen di berbagai device -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Instal Presensi BPOM</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>Presensi BPOM</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d47a1">
@@ -15,16 +20,44 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body { 
-            background: #eef2f3; 
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; /* Mencegah scroll pada body utama */
+            background-color: #eef2f3;
+            font-family: 'Poppins', sans-serif; 
+        }
+        
+        /* Container untuk UI Instalasi */
+        #installContainer {
+            background: linear-gradient(135deg, #eef2f3 0%, #dbe6f6 100%); 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             min-height: 100vh; 
-            font-family: 'Poppins', sans-serif; 
-            margin: 0; 
             text-align: center;
+            padding: 20px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
         }
+
+        /* Iframe untuk membungkus Google Apps Script */
+        #appFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none; /* Sembunyikan iframe secara default */
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 5;
+        }
+
         .install-card { 
             width: 100%; 
             max-width: 400px; 
@@ -33,7 +66,6 @@
             box-shadow: 0 15px 35px rgba(13, 71, 161, 0.2); 
             background-color: #ffffff; 
             animation: fadeIn 0.8s ease-in-out; 
-            margin: 20px;
         }
         .logo-img { width: 100px; height: auto; margin-bottom: 20px; }
         .title { color: #0d47a1; font-weight: 700; font-size: 1.6rem; margin-bottom: 10px; }
@@ -64,36 +96,32 @@
             color: #333;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Setingan Iframe Pembungkus PWA agar Benar-Benar Fullscreen */
-        #app-frame {
-            width: 100vw;
-            height: 100vh;
-            border: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 9999;
-        }
     </style>
 </head>
 <body>
 
-    <div class="install-card" id="installCard">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/0/02/Logo_Badan_POM.png" alt="Logo" class="logo-img">
-        <h2 class="title">Pasang Aplikasi</h2>
-        <p class="subtitle" id="mainSubtitle">Instal aplikasi Presensi Magang & PKL Balai BPOM di layar utama HP Anda agar lebih cepat diakses.</p>
-        
-        <p id="loadingMsg" class="loading-text"><span class="spinner-border spinner-border-sm me-2"></span> Menyiapkan instalasi...</p>
+    <!-- FRAME GOOGLE APPS SCRIPT -->
+    <!-- Ganti URL src dengan URL Exec Google Apps Script Anda -->
+    <iframe id="appFrame" src="https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec?source=pwa" allow="geolocation"></iframe>
 
-        <button id="pwaInstallBtn" class="btn-install">
-            <i class="bi bi-download me-2"></i> Instal Sekarang
-        </button>
+    <!-- CONTAINER INSTALASI -->
+    <div id="installContainer">
+        <div class="install-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/02/Logo_Badan_POM.png" alt="Logo" class="logo-img">
+            <h2 class="title">Pasang Aplikasi</h2>
+            <p class="subtitle" id="mainSubtitle">Instal aplikasi Presensi Magang & PKL Balai BPOM di layar utama HP Anda agar lebih cepat diakses.</p>
+            
+            <p id="loadingMsg" class="loading-text"><span class="spinner-border spinner-border-sm me-2"></span> Menyiapkan instalasi...</p>
 
-        <div id="iosGuide" class="ios-guide mt-3">
-            <p class="mb-2 fw-bold text-primary"><i class="bi bi-apple me-1"></i> Pengguna iPhone/iPad:</p>
-            1. Ketuk ikon <b>Bagikan</b> <i class="bi bi-share"></i> di bawah layar.<br>
-            2. Gulir ke bawah, pilih <b>Tambah ke Layar Utama</b> <i class="bi bi-plus-square"></i>.
+            <button id="pwaInstallBtn" class="btn-install">
+                <i class="bi bi-download me-2"></i> Instal Sekarang
+            </button>
+
+            <div id="iosGuide" class="ios-guide mt-3">
+                <p class="mb-2 fw-bold text-primary"><i class="bi bi-apple me-1"></i> Pengguna iPhone/iPad:</p>
+                1. Ketuk ikon <b>Bagikan</b> <i class="bi bi-share"></i> di bawah layar.<br>
+                2. Gulir ke bawah, pilih <b>Tambah ke Layar Utama</b> <i class="bi bi-plus-square"></i>.
+            </div>
         </div>
     </div>
 
@@ -106,47 +134,29 @@
             });
         }
 
+        const installContainer = document.getElementById('installContainer');
+        const appFrame = document.getElementById('appFrame');
         const installBtn = document.getElementById('pwaInstallBtn');
         const loadingMsg = document.getElementById('loadingMsg');
         const iosGuide = document.getElementById('iosGuide');
         const mainSubtitle = document.getElementById('mainSubtitle');
-        const installCard = document.getElementById('installCard');
         let deferredPrompt;
 
+        // Ambil parameter dari manifest.json saat dibuka lewat PWA
         const urlParams = new URLSearchParams(window.location.search);
         const isPWA = urlParams.get('source') === 'pwa';
 
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || isPWA;
 
-        // LOGIKA FULL SCREEN TERBARU
         if (isStandalone) {
-            // Sembunyikan form instalasi, siapkan layar penuh
-            installCard.style.display = 'none';
-            document.body.style.margin = "0";
-            document.body.style.padding = "0";
-            document.body.style.overflow = "hidden"; // Hapus potensi scroll double
-            
-            // Injeksi Google Apps Script ke dalam iframe agar tidak muncul URL bar
-            const iframe = document.createElement('iframe');
-            iframe.id = 'app-frame';
-            iframe.src = "https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec?source=pwa";
-            document.body.appendChild(iframe);
-
-            // Penerima trigger pindah halaman (redirect) dari Apps Script
-            window.addEventListener('message', function(event) {
-                if (event.data && event.data.action === 'redirect') {
-                    let newUrl = event.data.url;
-                    // Jaga agar parameter PWA tidak hilang saat pindah menu
-                    if (!newUrl.includes('source=pwa')) {
-                        newUrl += (newUrl.includes('?') ? '&' : '?') + 'source=pwa';
-                    }
-                    iframe.src = newUrl; // Memuat halaman baru HANYA di dalam Iframe
-                }
-            });
+            // JIKA SUDAH DIINSTAL / DIBUKA DARI PWA FULLSCREEN
+            // Sembunyikan halaman instalasi, tampilkan iframe
+            installContainer.style.display = 'none';
+            appFrame.style.display = 'block';
 
         } else {
-            // Logika Normal Tampilan Web Browser (Untuk Minta Instalasi)
+            // JIKA DIBUKA DI BROWSER BIASA (BELUM DIINSTAL)
             if (isIOS) {
                 loadingMsg.style.display = 'none';
                 iosGuide.style.display = 'block';
@@ -172,6 +182,7 @@
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
+                    console.log('Aplikasi sukses diinstal');
                     installBtn.style.display = 'none';
                     mainSubtitle.innerHTML = "Aplikasi sedang diinstal ke Layar Utama Anda. Silakan cek HP Anda.";
                 }
