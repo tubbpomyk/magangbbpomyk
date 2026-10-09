@@ -129,10 +129,19 @@
             });
         }
 
-        // TANGKAP NAVIGASI DARI DALAM IFRAME AGAR TETAP FULL SCREEN
+        // TANGKAP NAVIGASI DARI DALAM IFRAME AGAR TETAP FULL SCREEN DAN TANGKAP PERINTAH EXIT
         window.addEventListener('message', (event) => {
             if (event.data && event.data.action === 'redirect') {
                 document.getElementById('appFrame').src = event.data.url;
+            } 
+            // ---> TAMBAHAN BARU: EKSEKUSI EXIT APLIKASI
+            else if (event.data && event.data.action === 'exit') {
+                window.close(); // Berusaha menutup window standar
+                
+                // Trik Paling Ampuh untuk Android PWA:
+                // Memundurkan history sejauh mungkin akan memaksa OS Android menutup PWA 
+                // karena menganggap sesi aplikasi sudah selesai.
+                window.history.go(-(window.history.length - 1));
             }
         });
 
