@@ -16,7 +16,7 @@
     
     <style>
         body { 
-            background: linear-gradient(135deg, #eef2f3 0%, #dbe6f6 100%); 
+            background: #eef2f3; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
@@ -24,7 +24,6 @@
             font-family: 'Poppins', sans-serif; 
             margin: 0; 
             text-align: center;
-            padding: 20px;
         }
         .install-card { 
             width: 100%; 
@@ -34,6 +33,7 @@
             box-shadow: 0 15px 35px rgba(13, 71, 161, 0.2); 
             background-color: #ffffff; 
             animation: fadeIn 0.8s ease-in-out; 
+            margin: 20px;
         }
         .logo-img { width: 100px; height: auto; margin-bottom: 20px; }
         .title { color: #0d47a1; font-weight: 700; font-size: 1.6rem; margin-bottom: 10px; }
@@ -64,11 +64,22 @@
             color: #333;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Setingan Iframe Pembungkus PWA agar Benar-Benar Fullscreen */
+        #app-frame {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
 
-    <div class="install-card">
+    <div class="install-card" id="installCard">
         <img src="https://upload.wikimedia.org/wikipedia/commons/0/02/Logo_Badan_POM.png" alt="Logo" class="logo-img">
         <h2 class="title">Pasang Aplikasi</h2>
         <p class="subtitle" id="mainSubtitle">Instal aplikasi Presensi Magang & PKL Balai BPOM di layar utama HP Anda agar lebih cepat diakses.</p>
@@ -99,23 +110,43 @@
         const loadingMsg = document.getElementById('loadingMsg');
         const iosGuide = document.getElementById('iosGuide');
         const mainSubtitle = document.getElementById('mainSubtitle');
+        const installCard = document.getElementById('installCard');
         let deferredPrompt;
 
-        // Ambil parameter dari manifest.json saat dibuka lewat PWA
         const urlParams = new URLSearchParams(window.location.search);
         const isPWA = urlParams.get('source') === 'pwa';
 
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || isPWA;
 
+        // LOGIKA FULL SCREEN TERBARU
         if (isStandalone) {
-            loadingMsg.style.display = 'none';
-            mainSubtitle.innerHTML = "Aplikasi sudah berhasil terinstal di HP Anda. Silakan tutup halaman ini.";
+            // Sembunyikan form instalasi, siapkan layar penuh
+            installCard.style.display = 'none';
+            document.body.style.margin = "0";
+            document.body.style.padding = "0";
+            document.body.style.overflow = "hidden"; // Hapus potensi scroll double
             
-            // Bawa parameter 'source=pwa' ke link Google Apps Script untuk menghilangkan tombol instalasi
-            window.location.replace("https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec?source=pwa");
+            // Injeksi Google Apps Script ke dalam iframe agar tidak muncul URL bar
+            const iframe = document.createElement('iframe');
+            iframe.id = 'app-frame';
+            iframe.src = "https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec?source=pwa";
+            document.body.appendChild(iframe);
+
+            // Penerima trigger pindah halaman (redirect) dari Apps Script
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.action === 'redirect') {
+                    let newUrl = event.data.url;
+                    // Jaga agar parameter PWA tidak hilang saat pindah menu
+                    if (!newUrl.includes('source=pwa')) {
+                        newUrl += (newUrl.includes('?') ? '&' : '?') + 'source=pwa';
+                    }
+                    iframe.src = newUrl; // Memuat halaman baru HANYA di dalam Iframe
+                }
+            });
 
         } else {
+            // Logika Normal Tampilan Web Browser (Untuk Minta Instalasi)
             if (isIOS) {
                 loadingMsg.style.display = 'none';
                 iosGuide.style.display = 'block';
@@ -141,7 +172,6 @@
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    console.log('Aplikasi sukses diinstal');
                     installBtn.style.display = 'none';
                     mainSubtitle.innerHTML = "Aplikasi sedang diinstal ke Layar Utama Anda. Silakan cek HP Anda.";
                 }
