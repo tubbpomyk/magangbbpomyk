@@ -49,7 +49,7 @@
             width: 100%;
             transition: all 0.3s ease; 
             box-shadow: 0 4px 15px rgba(13, 71, 161, 0.3);
-            display: none; /* Default disembunyikan */
+            display: none; 
         }
         .btn-install:active { transform: scale(0.96); }
         .loading-text { color: #888; font-size: 0.9rem; font-style: italic; }
@@ -73,15 +73,12 @@
         <h2 class="title">Pasang Aplikasi</h2>
         <p class="subtitle" id="mainSubtitle">Instal aplikasi Presensi Magang & PKL Balai BPOM di layar utama HP Anda agar lebih cepat diakses.</p>
         
-        <!-- Pesan Loading saat menunggu event dari browser -->
         <p id="loadingMsg" class="loading-text"><span class="spinner-border spinner-border-sm me-2"></span> Menyiapkan instalasi...</p>
 
-        <!-- Tombol Utama Instal -->
         <button id="pwaInstallBtn" class="btn-install">
             <i class="bi bi-download me-2"></i> Instal Sekarang
         </button>
 
-        <!-- Panduan khusus iOS -->
         <div id="iosGuide" class="ios-guide mt-3">
             <p class="mb-2 fw-bold text-primary"><i class="bi bi-apple me-1"></i> Pengguna iPhone/iPad:</p>
             1. Ketuk ikon <b>Bagikan</b> <i class="bi bi-share"></i> di bawah layar.<br>
@@ -90,7 +87,6 @@
     </div>
 
     <script>
-        // Mendaftarkan Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
@@ -105,47 +101,43 @@
         const mainSubtitle = document.getElementById('mainSubtitle');
         let deferredPrompt;
 
-        // Mendeteksi sistem perangkat
+        // Ambil parameter dari manifest.json saat dibuka lewat PWA
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPWA = urlParams.get('source') === 'pwa';
+
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || isPWA;
 
         if (isStandalone) {
-            // Jika web ini dibuka dari aplikasi yang sudah terinstal
             loadingMsg.style.display = 'none';
             mainSubtitle.innerHTML = "Aplikasi sudah berhasil terinstal di HP Anda. Silakan tutup halaman ini.";
             
-            // Opsional: Langsung arahkan ke Apps Script jika dibuka di dalam aplikasi
-            window.location.replace("https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec");
+            // Bawa parameter 'source=pwa' ke link Google Apps Script untuk menghilangkan tombol instalasi
+            window.location.replace("https://script.google.com/macros/s/AKfycbwC60aXcqEK9CuYRJE38vMrxH6bgmBnIRZtoSjaYjboFTEDKi2U_gXSlZFm-o0mldMM/exec?source=pwa");
 
         } else {
             if (isIOS) {
-                // Tampilan khusus iOS (Tidak mendukung beforeinstallprompt)
                 loadingMsg.style.display = 'none';
                 iosGuide.style.display = 'block';
             } else {
-                // Tampilan Android / Chrome PC
-                // Event ini akan ditangkap oleh browser jika syarat PWA terpenuhi
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault();
                     deferredPrompt = e;
                     loadingMsg.style.display = 'none';
-                    installBtn.style.display = 'block'; // Munculkan tombol instal
+                    installBtn.style.display = 'block'; 
                 });
 
-                // Fallback: Jika dalam 3 detik pop-up instalasi bawaan tidak muncul (mungkin diblokir browser)
                 setTimeout(() => {
                     if(!deferredPrompt && !isIOS) {
                         loadingMsg.style.display = 'none';
-                        installBtn.style.display = 'block'; // Tetap munculkan tombol, nanti diproses via fallback
+                        installBtn.style.display = 'block'; 
                     }
                 }, 3000);
             }
         }
 
-        // Aksi ketika tombol Instal diklik
         installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
-                // Tampilkan prompt instalasi resmi dari sistem Android/Chrome
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
@@ -155,7 +147,6 @@
                 }
                 deferredPrompt = null;
             } else {
-                // Fallback jika tombol diklik tapi prompt tidak tersedia
                 Swal.fire({
                     title: 'Cara Instal Manual',
                     html: 'Browser ini memblokir pop-up instalasi otomatis. Untuk menginstal:<br><br>' +
@@ -167,7 +158,6 @@
             }
         });
 
-        // Deteksi otomatis jika sukses instal dari event sistem
         window.addEventListener('appinstalled', () => {
             installBtn.style.display = 'none';
             mainSubtitle.innerHTML = "Instalasi berhasil! Silakan tutup halaman ini dan buka aplikasi dari Layar Utama HP Anda.";
