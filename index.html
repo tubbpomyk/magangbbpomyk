@@ -132,16 +132,14 @@
         // TANGKAP NAVIGASI DARI DALAM IFRAME AGAR TETAP FULL SCREEN DAN TANGKAP PERINTAH EXIT
         window.addEventListener('message', (event) => {
             if (event.data && event.data.action === 'redirect') {
-                document.getElementById('appFrame').src = event.data.url;
+                let targetUrl = event.data.url;
+                if (targetUrl.indexOf('source=pwa') === -1) {
+                    targetUrl += (targetUrl.indexOf('?') !== -1 ? '&' : '?') + 'source=pwa';
+                }
+                document.getElementById('appFrame').src = targetUrl;
             } 
-            // ---> TAMBAHAN BARU: EKSEKUSI EXIT APLIKASI
             else if (event.data && event.data.action === 'exit') {
-                // Menutup PWA dari shell
                 window.close(); 
-                
-                // Menghapus perintah window.history.go karena script trap di login.html
-                // sudah memastikan halaman tertahan di form login dan tidak akan pernah
-                // melompat kembali ke halaman PresensiHome.
             }
         });
 
